@@ -1,0 +1,3 @@
+node_modules/
+# Downloaded source packs; see "Rebuilding the models" in the README
+assets_raw/

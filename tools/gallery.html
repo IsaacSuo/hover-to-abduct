@@ -1,0 +1,37 @@
+<!doctype html><meta charset="utf-8"><title>Asset gallery</title>
+<style>html,body{margin:0;background:#15122b;color:#fff;font:12px monospace}canvas{display:block}</style>
+<script type="importmap">{"imports":{"three":"/node_modules/three/build/three.module.js","three/addons/":"/node_modules/three/examples/jsm/"}}</script>
+<script type="module">
+// Dev-only contact sheet of assets/world.glb. ?only=a,b filters nodes; ?cols=N sets the grid.
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+const q = new URLSearchParams(location.search), COLS = +(q.get('cols') || 10), only = q.get('only')?.split(',');
+const gltf = await new GLTFLoader().loadAsync('/assets/world.glb');
+const nodes = gltf.scene.children.filter(n => !only || only.includes(n.name));
+const R = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+const CELL = Math.floor(innerWidth / COLS); R.setSize(innerWidth, innerHeight); document.body.append(R.domElement);
+R.setScissorTest(true); R.toneMapping = THREE.ACESFilmicToneMapping;
+const scene = new THREE.Scene(); scene.background = new THREE.Color('#2a2552');
+scene.add(new THREE.HemisphereLight('#c9c6ff', '#403060', 2.2));
+const sun = new THREE.DirectionalLight('#fff', 2.4); sun.position.set(-3, 5, 6); scene.add(sun);
+const flat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .85, side: THREE.DoubleSide, flatShading: true });
+const glow = new THREE.MeshBasicMaterial({ vertexColors: true });
+const glass = new THREE.MeshStandardMaterial({ color: '#9fd8ff', transparent: true, opacity: .25, side: THREE.DoubleSide, flatShading: true });
+gltf.scene.children.forEach(n => n.visible = false);
+nodes.forEach(n => { n.traverse(o => { if (o.isMesh) o.material = o.material.name === 'Glow' ? glow : o.material.name === 'Glass' ? glass : flat; }); });
+scene.add(gltf.scene);
+const cam = new THREE.PerspectiveCamera(32, 1, .1, 200);
+const labels = document.createElement('div'); labels.style.cssText = 'position:fixed;inset:0;pointer-events:none'; document.body.append(labels);
+nodes.forEach((n, i) => {
+  const x = (i % COLS) * CELL, row = Math.floor(i / COLS), y = innerHeight - (row + 1) * CELL;
+  n.visible = true;
+  const box = new THREE.Box3().setFromObject(n), s = box.getSize(new THREE.Vector3()), c = box.getCenter(new THREE.Vector3());
+  const r = Math.max(s.x, s.y, s.z) || 1;
+  cam.position.set(c.x + r * 1.1, c.y + r * .55, c.z + r * 1.9); cam.lookAt(c); cam.updateMatrixWorld();
+  R.setViewport(x, y, CELL, CELL); R.setScissor(x, y, CELL, CELL); R.render(scene, cam);
+  n.visible = false;
+  const l = document.createElement('div'); l.textContent = n.name;
+  l.style.cssText = `position:absolute;left:${x + 3}px;top:${row * CELL + 3}px`; labels.append(l);
+});
+document.title = 'done';
+</script>
