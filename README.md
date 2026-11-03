@@ -49,3 +49,8 @@ Both packs are CC0. Crediting them is optional but kind.
 
 The UFO, duck pilot, cockpit, ghosts, farmhouses, animals, cars, scarecrow, wheat, hay and the
 round and pine trees are built by `tools/build_assets.py`. The kit's own ghost models are unused.
+
+## License
+
+The code and the custom models are under the [MIT License](LICENSE). The two asset packs stay CC0,
+and Creepster stays under the SIL Open Font License.
